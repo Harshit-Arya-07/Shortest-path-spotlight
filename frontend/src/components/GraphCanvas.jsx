@@ -363,7 +363,8 @@ export default function GraphCanvas() {
   const handleKeyDown = (e) => {
     if (!edgeEditingId) return;
     if (e.key === 'Enter') {
-      const weight = parseFloat(edgeNewWeight) || 1;
+      const parsed = parseFloat(edgeNewWeight);
+      const weight = isNaN(parsed) ? 1 : parsed;
       const updateEdge = useGraphStore.getState().updateEdge;
       updateEdge(edgeEditingId, { weight });
       setEdgeEditingId(null);
@@ -399,7 +400,8 @@ export default function GraphCanvas() {
             value={edgeNewWeight}
             onChange={(e) => setEdgeNewWeight(e.target.value)}
             onBlur={() => {
-              const weight = parseFloat(edgeNewWeight) || 1;
+              const parsed = parseFloat(edgeNewWeight);
+              const weight = isNaN(parsed) ? 1 : parsed;
               const updateEdge = useGraphStore.getState().updateEdge;
               updateEdge(edgeEditingId, { weight });
               setEdgeEditingId(null);

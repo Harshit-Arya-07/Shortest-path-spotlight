@@ -266,10 +266,27 @@ export default function VisualizationPanel() {
   };
 
   const visualizeResult = (result) => {
+    // Normalize visited list to only include exact node IDs (algorithms may emit objects for relaxation steps)
+    const visitedIds = Array.isArray(result.visited)
+      ? result.visited
+          .map((v) => {
+            if (typeof v === 'string') return v;
+            if (v && typeof v === 'object') {
+              if (typeof v.to === 'string') return v.to;
+              if (typeof v.from === 'string') return v.from;
+            }
+            return null;
+          })
+          .filter((id) => id && nodes.find((n) => n.id === id))
+      : [];
+
+    // Choose the last valid node id as current node (if any)
+    const lastNodeId = visitedIds.length > 0 ? visitedIds[visitedIds.length - 1] : null;
+
     setVisualizationState({
       distances: result.distances,
-      visited: result.visited,
-      currentNode: result.visited[result.visited.length - 1],
+      visited: visitedIds,
+      currentNode: lastNodeId,
     });
     setExecutionTime(result.executionTime);
     setResult(result);
@@ -339,16 +356,27 @@ export default function VisualizationPanel() {
             Execution Time: <strong>{result.executionTime}ms</strong>
           </p>
           <p className="text-xs text-gray-600 mb-2">
-            Path: <strong>{result.path.join(' → ')}</strong>
+            Path:{' '}
+            <strong>
+              {Array.isArray(result.path)
+                ? result.path
+                    .map((id) => nodes.find((n) => n.id === id)?.label || id)
+                    .join(' → ')
+                : ''}
+            </strong>
           </p>
           {result.distances && (
             <div className="text-xs text-gray-600">
               <strong>Distances:</strong>
-              {Object.entries(result.distances).map(([nodeId, distance]) => (
-                <p key={nodeId}>
-                  {nodeId}: {distance === Infinity ? '∞' : distance}
-                </p>
-              ))}
+              {Object.entries(result.distances).map(([nodeId, distance]) => {
+                const node = nodes.find((n) => n.id === nodeId);
+                const display = node ? node.label : nodeId;
+                return (
+                  <p key={nodeId}>
+                    {display}: {distance === Infinity ? '∞' : distance}
+                  </p>
+                );
+              })}
             </div>
           )}
         </div>

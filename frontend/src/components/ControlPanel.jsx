@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useGraphStore, useUIStore } from '../store/index';
 
 export default function ControlPanel() {
-  const [newWeight, setNewWeight] = useState(1);
+  // keep as string so negative values and zero are preserved while editing
+  const [newWeight, setNewWeight] = useState('1');
   const [startNodeId, setStartNodeId] = useState('');
   const [endNodeId, setEndNodeId] = useState('');
 
@@ -40,7 +41,12 @@ export default function ControlPanel() {
 
   const handleUpdateEdgeWeight = () => {
     if (selectedEdge) {
-      updateEdge(selectedEdge.id, { weight: newWeight });
+      const weight = parseFloat(newWeight);
+      if (isNaN(weight)) {
+        // simple validation
+        return toast.error('Please enter a valid numeric weight');
+      }
+      updateEdge(selectedEdge.id, { weight });
     }
   };
 
@@ -102,9 +108,9 @@ export default function ControlPanel() {
           <input
             type="number"
             value={newWeight}
-            onChange={(e) => setNewWeight(parseFloat(e.target.value) || 1)}
+            onChange={(e) => setNewWeight(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-2"
-            placeholder="New weight"
+            placeholder="New weight (can be negative)"
           />
           <button
             onClick={handleUpdateEdgeWeight}
